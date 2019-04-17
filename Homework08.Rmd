@@ -9,7 +9,7 @@ output: html_document
 
 For this homework you will be working with the Abalone dataset from UCI, see [http://archive.ics.uci.edu/ml/datasets/abalone](http://archive.ics.uci.edu/ml/datasets/abalone). 
 
-There were 3 dimensional measurements made of the abalones: length, diameter and height in mm (millimeters). Length was defined to be the longest length.
+There were 3 dimensional measurements made of the abalones: length, diameter and height in mm (millimeters). Length was defined to be the longest length, longer than diameter or height. All measurements should be > 0.
 
 There were also 3 weight component measurements in grams: shucked weight, viscera weight and shell weight, which are all less than the total weight of the abalones. The total whole weight is also provided.
 
@@ -21,7 +21,7 @@ The "sexes" of the abalones in this dataset are:
 
 We will use unsupervised clustering methods in this homework to see if any of the clusters and components reflect the abalones by sex.
 
-The dataset also includes the number of rings in the shells which like trees can be used to determine the age of the abalones where age = rings + 1.5. We will not be using this measure in this homework.
+The dataset also includes the number of rings in the shells which, like trees, can be used to determine the age of the abalones where age = rings + 1.5. We will not be using this measure in this homework.
 
 The setup code below:
 
@@ -70,11 +70,13 @@ abaloneKeep <- abaloneSample %>%
 
 You will use the `abaloneKeep` dataset for this homework exercise, which has about 200+ cases and only has 6 variables: 3 dimensional measures and 3 component weights. 
 
-Use the code from the Unsupervised Learning lecture to guide you in this homework - see  [https://htmlpreview.github.io/?https://github.com/vhertzb/more-supervised-learning/blob/master/More_Supervised_Learning.html](https://htmlpreview.github.io/?https://github.com/vhertzb/more-supervised-learning/blob/master/More_Supervised_Learning.html) - look about half-way down the webpage.
+Use the code from the Unsupervised Learning lecture to guide you in this homework - see  [https://htmlpreview.github.io/?https://github.com/vhertzb/more-supervised-learning/blob/master/More_Supervised_Learning.html](https://htmlpreview.github.io/?https://github.com/vhertzb/more-supervised-learning/blob/master/More_Supervised_Learning.html) - look about half-way down the webpage where Unsupervised Learning begins.
+
+**NOTE: Code is provided below in place to help. REMEMBER to add `{r}` to the code chunks below so they will run as R code chunks in your final homework assignment. The `{r}` was removed to generate the homework assignment document.**
 
 ## Cluster Analysis
 
-```{r}
+```
 # Scale the data before clustering
 sd.data <- scale(abaloneKeep)
 ```
@@ -122,12 +124,76 @@ PROBLEM 7: Run a K-means clustering with K=3 (same as we did above for the hiera
 # insert code here
 ```
 
-## PCA
+## PCA - Principal Components Analysis
 
+PROBLEM 8: Find the principal components of the normalized data, which are computed using scale = TRUE option. Use `abaloneKeep` as the input dataset.
 
-## MDS
+```{r}
+# insert code here
+```
 
+### Plot of the data points on the first 2 PCs
 
+The code to show the "Scores Plot" on the 1st two PCs (principal components) is provided below.
+
+```
+# colors
+cols=rainbow(length(unique(abaloneSample$sex)))
+
+# mapping of colors to sex
+# blue is #0000FFFF
+# light green is #00FF00FF
+# red is #FF0000FF
+#
+# see https://webtools.fineaty.com/ColorInfo/0000FFFF/en/Information-about-the-0000FFFF-color.html
+# see https://webtools.fineaty.com/ColorInfo/00FF00FF/en/Information-about-the-00FF00FF-color.html
+# see https://webtools.fineaty.com/ColorInfo/FF0000FF/en/Information-about-the-FF0000FF-color.html
+
+table((unique(abaloneSample$sex)), cols)
+
+# plot scores
+plot(pr.out$x[, 1:2],
+     col = cols)
+legend(x = "topleft",
+       legend = c("F", "I", "M"),
+       col = cols, pch = 1)
+```
+
+PROBLEM 9: For the "Scores Plot" above, do you see any separation of the 3 sexes by their principal component scores?
+
+_... just answer in your own words here ..._
+
+PROBLEM 10: Look at the summary of the PCA, run the summary of `pr.out`. What percentage of variance is explained by th first 2 principal components?  
+
+```{r}
+# insert code here
+```
+
+PROBLEM 11: Plot the "Scree" plot
+
+```{r}
+# insert code here
+```
+
+## MDS - Multidimensional Scaling
+
+PROBLEM 12: Compute the Euclidean distance between each pair of points for `abaloneKeep` (you do not need to scale the data first - just use `abaloneKeep` as is).
+
+```{r}
+# insert code here
+```
+
+PROBLEM 13: Run `cmdscale()` function to perform a Classical Metric MDS, set `eig-TRUE` and `k=2`. Save the results in an object named `fit`. View the results for `fit`.
+
+```{r}
+# insert code here
+```
+
+PROBLEM 14: Plot the MDS fit results, set `labels = abaloneSample$sex`.
+
+```{r}
+# insert code here
+```
 
 
 
