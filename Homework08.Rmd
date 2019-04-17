@@ -163,7 +163,7 @@ PROBLEM 9: For the "Scores Plot" above, do you see any separation of the 3 sexes
 
 _... just answer in your own words here ..._
 
-PROBLEM 10: Look at the summary of the PCA, run the summary of `pr.out`. What percentage of variance is explained by th first 2 principal components?  
+PROBLEM 10: Look at the summary of the PCA, run the summary of `pr.out`. What percentage of variance is explained by the first 2 principal components?  
 
 ```{r}
 # insert code here
