@@ -1,0 +1,271 @@
+---
+title: "N741 Homework 8 - ANSWER KEY"
+author: "Melinda Higgins"
+date: "May 6, 2019"
+output: html_document
+---
+
+## Setup code
+
+For this homework you will be working with the Abalone dataset from UCI, see [http://archive.ics.uci.edu/ml/datasets/abalone](http://archive.ics.uci.edu/ml/datasets/abalone). 
+
+There were 3 dimensional measurements made of the abalones: length, diameter and height in mm (millimeters). Length was defined to be the longest length, longer than diameter or height. All measurements should be > 0.
+
+There were also 3 weight component measurements in grams: shucked weight, viscera weight and shell weight, which are all less than the total weight of the abalones. The total whole weight is also provided.
+
+The "sexes" of the abalones in this dataset are:
+
+* "I" for infants (immature)
+* "M" for males (adult)
+* "F" for females (adult)
+
+We will use unsupervised clustering methods in this homework to see if any of the clusters and components reflect the abalones by sex.
+
+The dataset also includes the number of rings in the shells which, like trees, can be used to determine the age of the abalones where age = rings + 1.5. We will not be using this measure in this homework.
+
+The setup code below:
+
+* reads in the data, 
+* adds the variable names, 
+* cleans up the dataset removing cases with typos or illogical measures that do not meet the criteria specified above; and 
+* the code also does a small random sample of 5% of the cases, giving us about 200+ abalones to work with for this homework exercise.
+
+```{r setup}
+# view code
+knitr::opts_chunk$set(echo = TRUE)
+
+# suppress printing of messages, warnings and errors
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(error = FALSE)
+
+library(dplyr)
+library(readr)
+
+# read-in abalone dataset
+# abalone <- read_csv("abalone.data", col_names = FALSE)
+abalone <- read_csv(url("http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data"))
+
+# assign variable names
+names(abalone) <- c("sex","length","diameter","height",
+                    "wholeWt","shuckedWt","visceraWt","shellWt",
+                    "rings")
+
+# cleanup data
+# component weights should be less than whole weight
+# length is defined to be the longest dimensional measurement
+# and all dimensions should be > 0 - there are some 0 heights
+abaloneClean <- abalone %>%
+  filter(shuckedWt < wholeWt) %>%
+  filter(visceraWt < wholeWt) %>%
+  filter(diameter < length) %>%
+  filter(height < length) %>%
+  filter(height > 0)
+
+# take a 5% random sample of 4169 cases
+abaloneSample <- abaloneClean %>%
+  sample_frac(size = 0.05, replace = FALSE)
+
+# keep 3 dimensions and 3 component weights
+# remove sex and number of rings
+# number of rings + 1.5 = age of abalone
+abaloneKeep <- abaloneSample %>%
+  select(length, diameter, height, 
+         shuckedWt, visceraWt, shellWt)
+```
+
+You will use the `abaloneKeep` dataset for this homework exercise, which has about 200+ cases and only has 6 variables: 3 dimensional measures and 3 component weights. 
+
+Use the code from the Unsupervised Learning lecture to guide you in this homework - see  [https://htmlpreview.github.io/?https://github.com/vhertzb/more-supervised-learning/blob/master/More_Supervised_Learning.html](https://htmlpreview.github.io/?https://github.com/vhertzb/more-supervised-learning/blob/master/More_Supervised_Learning.html) - look about half-way down the webpage where Unsupervised Learning begins.
+
+**NOTE: Code is provided below in place to help. REMEMBER to add `{r}` to the code chunks below so they will run as R code chunks in your final homework assignment. The `{r}` was removed to generate the homework assignment document.**
+
+## Cluster Analysis
+
+```{r}
+# Scale the data before clustering
+sd.data <- scale(abaloneKeep)
+```
+
+PROBLEM 1: Using the scaled data `sd.data` calculate the Euclidean distance between each pair of points
+
+**ANSWER KEY**
+
+```{r}
+# Calculate Euclidean distance between each pair of points
+data.dist <- dist(sd.data)
+```
+
+PROBLEM 2: Plot the tree, default linkage = 'complete'. Set `labels = abaloneSample$sex` to get the sex labels for the plot.
+
+**ANSWER KEY**
+
+```{r}
+# Plot the tree, default linkage is 'complete'
+plot(hclust(data.dist), labels = abaloneSample$sex, 
+     main = "Complete Linkage", xlab = "",
+     sub = "", ylab = "")
+```
+
+PROBLEM 3: Plot the tree, using linkage = 'average'. Set `labels = abaloneSample$sex` to get the sex labels for the plot.
+
+**ANSWER KEY**
+
+```{r}
+# Plot the tree, using linkage = 'average'
+plot(hclust(data.dist), 
+     method = "average", 
+     labels = abaloneSample$sex, 
+     main = "Average Linkage", xlab = "", 
+     sub = "", ylab = "")
+```
+
+PROBLEM 4: Plot the tree, using default linkage = 'single'. Set `labels = abaloneSample$sex` to get the sex labels for the plot.
+
+**ANSWER KEY**
+
+```{r}
+# Plot the tree, using default linkage = 'single'
+plot(hclust(data.dist), 
+     method = "single", 
+     labels = abaloneSample$sex, 
+     main = "Single Linkage", xlab = "", 
+     sub = "", ylab = "")
+```
+
+PROBLEM 5: Let's use complete linkage and cut into 3 clusters. When running the `table()` line of code use `abaloneSample$sex` to compare the original sexes to the clusters `hc.clusters`.
+
+**ANSWER KEY**
+
+```{r}
+hc.out <- hclust(dist(sd.data))
+hc.clusters <- cutree(hc.out, 3)
+table(hc.clusters, abaloneSample$sex)
+```
+
+PROBLEM 6: Given the results above:
+
+* which cluster(s) did the best job identifying the infants?
+* which cluster(s) found the adults (M and F)?
+
+**ANSWER KEY**
+
+It appears that cluster 1 did the best in only identifying the infants, but cluster 3 actually identified more infants, but cluster 3 also identified females and males. Cluster 2 found the fewest infants.
+
+Cluster 2 found the most adults, males and females, without finding infants, but cluster 3 found the most of all 3 sexes. None of the clusters were exclusive by sex.
+
+## K-Means clustering
+
+PROBLEM 7: Run a K-means clustering with K=3 (same as we did above for the hierarchical clustering). Compare the clusters from K-means clustering and the hierarchical clustering `hc.clusters` (using the complete linkage method). How do these clusters compare - similar or not?
+
+**ANSWER KEY**
+
+```{r}
+set.seed(40523)
+km.out = kmeans(sd.data, 3, nstart = 20)
+km.clusters = km.out$cluster
+table(hc.clusters, abaloneSample$sex)
+table(km.clusters, abaloneSample$sex)
+```
+
+So, it looks like the K-means cluster 3 found the fewest infants and only found adults, males and females - similar to the `hc.clusters` cluster 2. `km.clusters` 1 found proportionately more infants than males or females and K-means cluster 2 found approximately even numbers of all 3 sexes.
+
+So, neither clustering approach does a great job of differentiating the sexes simply through an untargeted, unsupervised approach.
+
+## PCA - Principal Components Analysis
+
+PROBLEM 8: Find the principal components of the normalized data, which are computed using scale = TRUE option. Use `abaloneKeep` as the input dataset.
+
+**ANSWER KEY**
+
+```{r}
+pr.out <- prcomp(abaloneKeep, scale = TRUE)
+```
+
+### Plot of the data points on the first 2 PCs
+
+The code to show the "Scores Plot" on the 1st two PCs (principal components) is provided below.
+
+```{r}
+# colors
+cols=rainbow(length(unique(abaloneSample$sex)))
+
+# mapping of colors to sex
+# blue is #0000FFFF
+# light green is #00FF00FF
+# red is #FF0000FF
+#
+# see https://webtools.fineaty.com/ColorInfo/0000FFFF/en/Information-about-the-0000FFFF-color.html
+# see https://webtools.fineaty.com/ColorInfo/00FF00FF/en/Information-about-the-00FF00FF-color.html
+# see https://webtools.fineaty.com/ColorInfo/FF0000FF/en/Information-about-the-FF0000FF-color.html
+
+table((unique(abaloneSample$sex)), cols)
+
+# plot scores
+plot(pr.out$x[, 1:2],
+     col = cols)
+legend(x = "topleft",
+       legend = c("F", "I", "M"),
+       col = cols, pch = 1)
+```
+
+PROBLEM 9: For the "Scores Plot" above, do you see any separation of the 3 sexes by their principal component scores?
+
+_... just answer in your own words here ..._
+
+**ANSWER KEY**
+
+Given the plot of the first two PCs, there is no clear separation of the 3 sexes on the principal components.
+
+PROBLEM 10: Look at the summary of the PCA, run the summary of `pr.out`. What percentage of variance is explained by the first 2 principal components?  
+
+```{r}
+# look at summary of PCA
+summary(pr.out)
+```
+
+**ANSWER KEY**
+
+The first 2 PCs explain 95.4% of the variability in the dataset which is really high - this is good.
+
+PROBLEM 11: Plot the "Scree" plot
+
+```{r}
+# plot scree plot
+plot(pr.out)
+```
+
+## MDS - Multidimensional Scaling
+
+PROBLEM 12: Compute the Euclidean distance between each pair of points for `abaloneKeep` (you do not need to scale the data first - just use `abaloneKeep` as is).
+
+```{r}
+# compute distances for abaloneKeep
+d <- dist(abaloneKeep)
+```
+
+PROBLEM 13: Run `cmdscale()` function to perform a Classical Metric MDS, set `eig-TRUE` and `k=2`. Save the results in an object named `fit`. View the results for `fit`.
+
+```{r}
+# k is the number of principal coordinates we want
+# let's use 2
+# run cmdscale - classicalmetric MDS
+fit <- cmdscale(d, eig=TRUE, k=2)
+
+# view the results
+fit
+```
+
+PROBLEM 14: Plot the MDS fit results, set `labels = abaloneSample$sex`.
+
+```{r}
+# plot it
+x <- fit$points[,1]
+y <- fit$points[,2]
+
+plot(x, y, xlab = "PCo1", ylab = "PCo2",
+     main = "Metric MDS", type = "n")
+text(x, y, labels = abaloneSample$sex, cex = 0.7)
+```
+
+Based on this plot, again the separation is not great between the 3 sexes, although it does look like slightly more infants are plotting towards the upper end (right side) of the plot (along PCo1).
